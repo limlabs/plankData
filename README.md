@@ -1,12 +1,10 @@
-# plankData
+# PlankData
 To run the docker container use:
 docker build -t planck-flask .
 docker run -p 8080:8080 planck-flask
 
-# Run and map internal port 8080 to host port 5050
-docker run -p 5050:8080 planck-flask
-
-You can see the image at http://localhost:5050/
+#Runs in:
+You can see the image at http://localhost:8080/
 
 #Variant URL's for the models:
 http://localhost:5050/hilltop?amp=5400&decay=2000&phase=2.5&freq=0.0125&alpha=0.2&beta=0.4
