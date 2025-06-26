@@ -1,4 +1,4 @@
-FROM cgr.dev/chainguard/python:3.11
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -19,5 +19,9 @@ COPY . .
 # Expose the port used by Gunicorn / App Runner
 EXPOSE 8080
 
-# Run Flask with Gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "-w", "4", "app:app"]
+# Run with Gunicorn in production mode
+# -w 4: 4 worker processes
+# -b 0.0.0.0:8080: bind to all interfaces on port 8080
+# --access-logfile -: log to stdout
+# app:app: use app.py and look for 'app' variable
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "--access-logfile", "-", "app:app"]
