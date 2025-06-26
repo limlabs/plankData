@@ -3,7 +3,7 @@ To run the docker container use:
 docker build -t planck-flask .
 docker run -p 8080:8080 planck-flask
 
-#Runs in:
+#Runs:
 You can see the image at http://localhost:8080/
 
 #Variant URL's for the models:
