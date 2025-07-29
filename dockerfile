@@ -1,5 +1,5 @@
 # Build stage for React frontend
-FROM node:18 AS frontend-builder
+FROM public.ecr.aws/docker/library/node:18-alpine AS frontend-builder
 WORKDIR /frontend
 COPY frontend/package*.json ./
 RUN npm install
@@ -7,11 +7,12 @@ COPY frontend/ ./
 RUN npm run build
 
 # Main Python stage
-FROM python:3.11-slim
+FROM public.ecr.aws/docker/library/python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 
 # Set working directory
 WORKDIR /app
@@ -28,8 +29,15 @@ COPY . .
 # Copy the built React app from frontend-builder
 COPY --from=frontend-builder /frontend/dist frontend/dist
 
+# Set proper file permissions for security
+RUN chown -R nobody:nogroup /app
+USER nobody
+
 # Expose the port used by Gunicorn / App Runner
 EXPOSE 8080
+
+# Verify build
+RUN python -c "import app; print('App module loaded successfully')"
 
 # Run with Gunicorn in production mode
 # -w 4: 4 worker processes
