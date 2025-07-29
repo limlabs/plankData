@@ -1,3 +1,12 @@
+# Build stage for React frontend
+FROM node:18 AS frontend-builder
+WORKDIR /frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
+
+# Main Python stage
 FROM python:3.11-slim
 
 # Set environment variables
@@ -15,6 +24,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code
 COPY . .
+
+# Copy the built React app from frontend-builder
+COPY --from=frontend-builder /frontend/dist frontend/dist
 
 # Expose the port used by Gunicorn / App Runner
 EXPOSE 8080

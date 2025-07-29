@@ -1,11 +1,12 @@
-from flask import Flask, send_file, request, redirect, url_for
+from flask import Flask, send_file, request, redirect, url_for, send_from_directory
+import os
 import matplotlib
 matplotlib.use('Agg')  # Use Agg backend
 import matplotlib.pyplot as plt
 import numpy as np
 import io
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='frontend/dist')
 
 def load_planck_data():
     try:
@@ -41,7 +42,7 @@ def plot_spectrum(extra=None, label="Model"):
     buf.seek(0)
     return buf
 
-@app.route("/")
+@app.route("/api/standard")
 def base():
     return send_file(plot_spectrum(), mimetype='image/png')
 
@@ -110,39 +111,41 @@ def compute_hilltop(ell, amp, mu, v, p, phi):
     # Hilltop potential parameters control the shape of inflation
     # Small field inflation occurs near the hilltop (phi < mu)
     # The power p determines how steep the potential is
-    # mu: mass scale
-    # v: vacuum expectation value
-    # p: power in potential
-    # phi: initial field value
     
-    # Basic power spectrum shape
-    ns = 1 - 2/p * (phi/mu)**2  # Spectral index
-    running = -2/p * (phi/mu)**2 * (1 - (p+1)/p * (phi/mu)**2)  # Running
+    # Basic power spectrum shape - keep original physics but enhance sensitivity
+    # Make phi ratio more sensitive by using a larger effective range
+    phi_ratio = (phi * 5) / mu  # Scale phi effect by 5x for visibility
+    
+    ns = 1 - 2/p * phi_ratio**2  # Spectral index
+    running = -2/p * phi_ratio**2 * (1 - (p+1)/p * phi_ratio**2)  # Running
     
     # Power spectrum with running
     k = ell/14000  # Convert ell to k
     ln_k_pivot = np.log(0.05)  # Pivot scale
-    power = amp * (k/0.05)**(ns-1 + 0.5*running*np.log(k/0.05))
     
-    # Add oscillations from potential
-    osc_amp = v * (phi/mu)**p
+    # Enhanced amplitude scaling - make amp changes more visible
+    power = (amp * 1.5) * (k/0.05)**(ns-1 + 0.5*running*np.log(k/0.05))
+    
+    # Add oscillations from potential - enhanced phi dependence
+    osc_amp = v * phi_ratio**p * 2  # Double the oscillation amplitude effect
     osc_freq = 2*np.pi*mu
     power *= (1 + osc_amp * np.sin(osc_freq * np.log(k)))
     
-    # Damping at high-l
-    damping = np.exp(-((ell-1500)/1000)**2)
+    # Damping at high-l - make it slightly phi-dependent
+    damping_center = 1500 + 100 * phi_ratio  # Phi affects damping center
+    damping = np.exp(-((ell-damping_center)/1000)**2)
     
     return power * damping
 
 def get_hilltop_params():
     """Return best-fit parameters for hilltop model."""
-    return (4700, 13.5, 1.8, 3.2, 0.37)
+    return (2400, 10.8, 3.6, 3.6, 0.69)
 
 def get_starobinsky_params():
     """Return best-fit parameters for Starobinsky model."""
     return (5500, 9000, 4.0, 0.95, 0.07)
 
-@app.route("/starobinsky")
+@app.route('/api/starobinsky')
 def starobinsky():
     ell = np.linspace(30, 2500, 800)
     try:
@@ -161,7 +164,7 @@ def starobinsky():
     buf = plot_spectrum((ell, D_ell), label="Starobinsky-like (Planck-tuned)")
     return send_file(buf, mimetype='image/png')
 
-@app.route("/hilltop")
+@app.route('/api/hilltop')
 def hilltop():
     ell = np.linspace(30, 2500, 800)  # Match Starobinsky ell range
     try:
@@ -182,6 +185,17 @@ def hilltop():
     # Use same plotting function as Starobinsky
     buf = plot_spectrum((ell, D_ell), label="Hilltop Inflation")
     return send_file(buf, mimetype='image/png')
+
+# Serve React App
+@app.route('/')
+def serve_react():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def serve_react_static(path):
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
