@@ -15,7 +15,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
+ENV PORT=3000
 ENV MPLCONFIGDIR=/tmp
 
 # Set working directory
@@ -41,11 +41,11 @@ USER nobody
 RUN python -c "import app; print('App module loaded successfully')"
 
 # Expose the port used by Gunicorn / App Runner
-EXPOSE 8080
+EXPOSE 3000
 
 # Run with Gunicorn in production mode
 # -w 4: 4 worker processes
-# -b 0.0.0.0:8080: bind to all interfaces on port 8080
+# -b 0.0.0.0:3000: bind to all interfaces on port 3000
 # --access-logfile -: log to stdout
 # app:app: use app.py and look for 'app' variable
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "--access-logfile", "-", "app:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:3000", "--access-logfile", "-", "app:app"]
