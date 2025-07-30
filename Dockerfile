@@ -16,7 +16,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
-ENV MPLCONFIGDIR=/tmp/matplotlib
+ENV MPLCONFIGDIR=/tmp
 
 # Set working directory
 WORKDIR /app
@@ -33,12 +33,12 @@ COPY . .
 # Copy the built React app from frontend-builder
 COPY --from=frontend-builder /frontend/dist frontend/dist
 
-# Verify build before changing user
-RUN python -c "import app; print('App module loaded successfully')"
-
 # Set proper file permissions for security
 RUN chown -R nobody:nogroup /app
 USER nobody
+
+# Verify build after switching to nobody user
+RUN python -c "import app; print('App module loaded successfully')"
 
 # Expose the port used by Gunicorn / App Runner
 EXPOSE 8080
