@@ -9,6 +9,9 @@ RUN npm run build
 # Main Python stage
 FROM public.ecr.aws/docker/library/python:3.11-slim
 
+# Fix CVE-2025-6020 security vulnerability
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -29,15 +32,15 @@ COPY . .
 # Copy the built React app from frontend-builder
 COPY --from=frontend-builder /frontend/dist frontend/dist
 
+# Verify build before changing user
+RUN python -c "import app; print('App module loaded successfully')"
+
 # Set proper file permissions for security
 RUN chown -R nobody:nogroup /app
 USER nobody
 
 # Expose the port used by Gunicorn / App Runner
 EXPOSE 8080
-
-# Verify build
-RUN python -c "import app; print('App module loaded successfully')"
 
 # Run with Gunicorn in production mode
 # -w 4: 4 worker processes
