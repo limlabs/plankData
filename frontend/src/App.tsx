@@ -114,6 +114,9 @@ function App() {
   const [standardImage, setStandardImage] = useState('')
   const [hilltopImage, setHilltopImage] = useState('')
   const [starobinskyImage, setStarobinskyImage] = useState('')
+  const [standardLoading, setStandardLoading] = useState(true)
+  const [hilltopLoading, setHilltopLoading] = useState(true)
+  const [starobinskyLoading, setStarobinskyLoading] = useState(true)
 
   // Hilltop model parameters with ranges
   const [hilltopParams, setHilltopParams] = useState<HilltopParams>({
@@ -139,11 +142,13 @@ function App() {
 
   // Fetch standard model
   useEffect(() => {
+    setStandardLoading(true)
     axios.get('/api/standard', { responseType: 'blob' })
       .then(response => {
         setStandardImage(URL.createObjectURL(response.data))
       })
       .catch(error => console.error('Error fetching standard model:', error))
+      .finally(() => setStandardLoading(false))
   }, [])
 
   // Fetch Hilltop model
@@ -152,11 +157,13 @@ function App() {
     Object.entries(hilltopParams).forEach(([key, value]) => {
       params.append(key, value.toString())
     })
+    setHilltopLoading(true)
     axios.get(`/api/hilltop?${params}`, { responseType: 'blob' })
       .then(response => {
         setHilltopImage(URL.createObjectURL(response.data))
       })
       .catch(error => console.error('Error fetching hilltop model:', error))
+      .finally(() => setHilltopLoading(false))
   }, [hilltopParams])
 
   // Fetch Starobinsky model
@@ -165,11 +172,13 @@ function App() {
     Object.entries(starobinskyParams).forEach(([key, value]) => {
       params.append(key, value.toString())
     })
+    setStarobinskyLoading(true)
     axios.get(`/api/starobinsky?${params}`, { responseType: 'blob' })
       .then(response => {
         setStarobinskyImage(URL.createObjectURL(response.data))
       })
       .catch(error => console.error('Error fetching starobinsky model:', error))
+      .finally(() => setStarobinskyLoading(false))
   }, [starobinskyParams])
 
   const paramRanges = {
@@ -209,7 +218,26 @@ function App() {
           <Box sx={{ flexGrow: 1 }}>
             <Paper sx={{ p: 1.5, mb: 1 }}>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>Standard ΛCDM Model</Typography>
-              {standardImage && <img src={standardImage} alt="Standard Model" style={{width: '100%'}} />}
+              {standardLoading || !standardImage ? (
+                <Box sx={{
+                  height: '300px',
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'column',
+                  gap: 2,
+                  borderRadius: 1,
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                  bgcolor: 'background.default'
+                }}>
+                  <div className="rainbow-spinner" />
+                  <Typography variant="body2" color="text.secondary">Loading Inflation Model…</Typography>
+                </Box>
+              ) : (
+                <img src={standardImage} alt="Standard Model" style={{width: '100%'}} />
+              )}
             </Paper>
           </Box>
         </TabPanel>
@@ -219,7 +247,26 @@ function App() {
             <Typography variant="h6" gutterBottom>Hilltop Inflation Model</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                {hilltopImage && <img src={hilltopImage} alt="Hilltop Model" style={{maxWidth: '100%', height: '450px', objectFit: 'contain'}} />}
+                {hilltopLoading || !hilltopImage ? (
+                  <Box sx={{
+                    height: '450px',
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    gap: 2,
+                    borderRadius: 1,
+                    border: '1px dashed',
+                    borderColor: 'divider',
+                    bgcolor: 'background.default'
+                  }}>
+                    <div className="rainbow-spinner" />
+                    <Typography variant="body2" color="text.secondary">Loading Inflation Model…</Typography>
+                  </Box>
+                ) : (
+                  <img src={hilltopImage} alt="Hilltop Model" style={{maxWidth: '100%', height: '450px', objectFit: 'contain'}} />
+                )}
               </Box>
               <Box sx={{ width: '100%' }}>
                 {renderSliders<HilltopParams>(hilltopParams, setHilltopParams, paramRanges.hilltop)}
@@ -233,7 +280,26 @@ function App() {
             <Typography variant="h6" gutterBottom>Starobinsky R² Inflation Model</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                {starobinskyImage && <img src={starobinskyImage} alt="Starobinsky Model" style={{maxWidth: '100%', height: '450px', objectFit: 'contain'}} />}
+                {starobinskyLoading || !starobinskyImage ? (
+                  <Box sx={{
+                    height: '450px',
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    gap: 2,
+                    borderRadius: 1,
+                    border: '1px dashed',
+                    borderColor: 'divider',
+                    bgcolor: 'background.default'
+                  }}>
+                    <div className="rainbow-spinner" />
+                    <Typography variant="body2" color="text.secondary">Loading Inflation Model…</Typography>
+                  </Box>
+                ) : (
+                  <img src={starobinskyImage} alt="Starobinsky Model" style={{maxWidth: '100%', height: '450px', objectFit: 'contain'}} />
+                )}
               </Box>
               <Box sx={{ width: '100%' }}>
                 {renderSliders<StarobinskyParams>(starobinskyParams, setStarobinskyParams, paramRanges.starobinsky)}

@@ -51,7 +51,7 @@ The application will be available at http://localhost:8080
 1. Build the Docker image:
    ```bash
    docker build -t plank-data .
-   docker run -p 8080:8080 --name plank-app plank-data
+   docker run -p 8080:3000 --name plank-app plank-data 
    ```
 
 2. Tag and push to Amazon ECR:
